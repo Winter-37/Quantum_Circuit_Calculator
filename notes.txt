@@ -27,3 +27,4 @@ probs() method provides the probabilities of the possible states of the system
 
 cmatrix() method shows the current column matrix of the qubits which holds all the possible states for a set of qubits (initialized during the beinging)
 states() shows all the possible combination/ states possible for the initialized set of qubits
+plot() method gives the plot of the probabilities of possible qubit states

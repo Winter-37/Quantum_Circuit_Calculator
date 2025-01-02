@@ -1,5 +1,6 @@
 import numpy as np
 from itertools import product
+import matplotlib.pyplot as plt
 
 sqr2 = 1 / np.sqrt(2) 
 
@@ -284,6 +285,48 @@ class cirbuild():
         final_gate_matrix = zero_position + one_position
         self.circuit_matrix = np.dot(final_gate_matrix,qubit_set)
 
+    def ch(self,cqubit,tqubit):
+        qubit_set = self.circuit_matrix
+        big_one = max(cqubit,tqubit)
+        small_one = min(cqubit,tqubit) 
+        before = small_one
+        inbetween = abs(tqubit - cqubit) - 1
+        after = self.num_qubits - big_one - 1
+
+        if cqubit > tqubit:
+            first_1= cirbuild.h_gate
+            first_0 = cirbuild.identity
+            second_0 = cirbuild.outer_zero
+            second_1 = cirbuild.outer_one
+        else:
+            second_1 = cirbuild.h_gate
+            second_0 = cirbuild.identity
+            first_0 = cirbuild.outer_zero
+            first_1 = cirbuild.outer_one
+
+        gate_set = 1
+        for num in range(before):
+            gate_set = np.kron(gate_set,cirbuild.identity)
+
+        zero_position = np.kron(gate_set,first_0)
+        one_position = np.kron(gate_set,first_1)
+        
+        for num in range(inbetween):
+            zero_position = np.kron(zero_position,cirbuild.identity)
+            one_position = np.kron(one_position,cirbuild.identity)
+
+
+        zero_position = np.kron(zero_position,second_0)
+        one_position = np.kron(one_position,second_1)
+
+
+        for num in range(after):
+            zero_position = np.kron(zero_position,cirbuild.identity)
+            one_position = np.kron(one_position,cirbuild.identity)
+
+        final_gate_matrix = zero_position + one_position
+        self.circuit_matrix = np.dot(final_gate_matrix,qubit_set)
+
     def ccx(self,cqubit1,cqubit2,tqubit):
         qubit_set = self.circuit_matrix
         bigc = max(cqubit1,cqubit2)
@@ -399,13 +442,29 @@ class cirbuild():
         for state in range(total_states):
             prob = np.abs(self.circuit_matrix[state][0]) ** 2
             if abs(prob) < 1.0e-3:
-
                 continue
             print((f'{str(prob)[:6]} probability of state {self.state_list[state]}'))
         print('###########')
 
     def cmatrix(self):
         print(self.circuit_matrix)
+
+    def plot(self):
+        total_states = 2 ** self.num_qubits
+        prob_list = []
+        state_list = []
+        for state in range(total_states):
+            prob = np.abs(self.circuit_matrix[state][0]) ** 2
+            if abs(prob) < 1.0e-3:
+                continue
+            prob_list.append(float(str(prob)[:6]))
+            state_list.append(self.state_list[state])
+
+        plt.bar(state_list,prob_list)
+        plt.xlabel('States')
+        plt.ylabel('Probability')
+        plt.title('State Probability Graph')
+        plt.show()
 
 
 
