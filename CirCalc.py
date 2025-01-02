@@ -9,7 +9,7 @@ class cirbuild():
     y_gate = np.array([[0,-1j],[1j,0]])
     z_gate = np.array([[1,0],[0,-1]])
     h_gate = np.array([[sqr2,sqr2],[sqr2,-sqr2]])
-    phase_gate = np.array([[1,0],[0,1j]])
+    
 
 
     outer_zero = np.array([[1,0],[0,0]])
@@ -104,9 +104,74 @@ class cirbuild():
 
         for num in range(after):
             gate_set = np.kron(cirbuild.identity,gate_set)
+
         
         self.circuit_matrix = np.dot(gate_set,qubit_set)
 
+    def rx(self,qubit,theta):
+        theta_by_two = np.deg2rad(float(theta)/2)
+        rx_gate = np.array([[np.cos(theta_by_two), -1j * np.sin(theta_by_two)],[-1j * np.sin(theta_by_two), np.cos(theta_by_two)]])
+        qubit_set = self.circuit_matrix
+        before = self.num_qubits - qubit -1
+        qubit_pos = cirbuild.x_gate
+        after = self.num_qubits - before - 1
+        gate_set = 1
+        for num in range(before):
+            gate_set = np.kron(cirbuild.identity,gate_set)
+
+        gate_set = np.kron(rx_gate,gate_set)
+
+        for num in range(after):
+            gate_set = np.kron(cirbuild.identity,gate_set)
+        
+        self.circuit_matrix = np.dot(gate_set,qubit_set)
+
+    def ry(self,qubit,theta):
+        theta_by_two = np.deg2rad(float(theta)/2)
+        rx_gate = np.array([[np.cos(theta_by_two), -1 * np.sin(theta_by_two)],[ np.sin(theta_by_two), np.cos(theta_by_two)]])
+        qubit_set = self.circuit_matrix
+        before = self.num_qubits - qubit -1
+        qubit_pos = cirbuild.x_gate
+        after = self.num_qubits - before - 1
+        gate_set = 1
+        for num in range(before):
+            gate_set = np.kron(cirbuild.identity,gate_set)
+
+        gate_set = np.kron(rx_gate,gate_set)
+
+        for num in range(after):
+            gate_set = np.kron(cirbuild.identity,gate_set)
+        
+        self.circuit_matrix = np.dot(gate_set,qubit_set)
+
+    def rz(self,qubit,theta):
+        thetabytwo = np.deg2rad(float(theta)/2)
+        coes= np.cos(thetabytwo)
+        sint = 1j * np.sin(thetabytwo)
+        if abs(sint) < 1.0e-2:
+            sint = 0
+        euler = coes + sint
+        antieuler = coes - sint
+        phase_gate = np.array([[antieuler,0],[0,euler]])
+        qubit_set = self.circuit_matrix
+        before = self.num_qubits - qubit -1
+        qubit_pos = cirbuild.x_gate
+        after = self.num_qubits - before - 1
+        gate_set = 1
+        for num in range(before):
+            gate_set = np.kron(cirbuild.identity,gate_set)
+
+        gate_set = np.kron(phase_gate,gate_set)
+
+        for num in range(after):
+            gate_set = np.kron(cirbuild.identity,gate_set)
+        
+        current_cmatrix = np.dot(gate_set,qubit_set)
+
+        self.circuit_matrix = np.where(
+        (np.abs(current_cmatrix.real) > 0) & (np.abs(current_cmatrix.real) < 1.0e-3), 
+            1j * current_cmatrix.imag, current_cmatrix)
+    
     def cx(self,cqubit,tqubit):
         qubit_set = self.circuit_matrix
         big_one = max(cqubit,tqubit)
@@ -149,8 +214,14 @@ class cirbuild():
         final_gate_matrix = zero_position + one_position
         self.circuit_matrix = np.dot(final_gate_matrix,qubit_set)
 
-    ################# something not done right
-    def p(self,qubit):
+    def p(self,qubit,theta):
+        theta = np.deg2rad(float(theta))
+        coes= np.cos(theta)
+        sint = 1j * np.sin(theta)
+        if abs(sint) < 1.0e-2:
+            sint = 0
+        euler = coes + sint
+        phase_gate = np.array([[1,0],[0,euler]])
         qubit_set = self.circuit_matrix
         before = self.num_qubits - qubit -1
         qubit_pos = cirbuild.x_gate
@@ -159,12 +230,17 @@ class cirbuild():
         for num in range(before):
             gate_set = np.kron(cirbuild.identity,gate_set)
 
-        gate_set = np.kron(cirbuild.phase_gate,gate_set)
+        gate_set = np.kron(phase_gate,gate_set)
 
         for num in range(after):
             gate_set = np.kron(cirbuild.identity,gate_set)
         
-        self.circuit_matrix = np.dot(gate_set,qubit_set)
+        current_cmatrix = np.dot(gate_set,qubit_set)
+
+        self.circuit_matrix = np.where(
+        (np.abs(current_cmatrix.real) > 0) & (np.abs(current_cmatrix.real) < 1.0e-3), 
+            1j * current_cmatrix.imag, current_cmatrix)
+
 
     def cz(self,cqubit,tqubit):
         qubit_set = self.circuit_matrix
@@ -252,8 +328,7 @@ class cirbuild():
             second_1 = cirbuild.x_gate
             third_0 = cirbuild.outer_zero
             thrid_1 = cirbuild.outer_one
-            
-        print(before,inbetween_1,inbetween_2,after)
+        
 
         gate_set = 1
         for num in range(before):
@@ -288,10 +363,27 @@ class cirbuild():
         new_list = []
         total_states = 2 ** self.num_qubits
         for state in range(total_states):
-            prob = (self.circuit_matrix[state][0])
-            if prob < 1.0e-3:
+            coeff = (self.circuit_matrix[state][0])
+            if abs(coeff) < 1.0e-3:
                 continue
-            new_list.append(f'{str(prob)[:6]}{self.state_list[state]}')
+            if abs(coeff.imag) > 0 and abs(coeff.real) > 0:
+                z_list = str(coeff).split('+')
+                new_list.append(f"({z_list[0][:6].replace('(','')} + {z_list[1][:5].replace(')','')}j){self.state_list[state]}")
+
+
+            elif abs(coeff.imag) > 0:
+
+                new_list.append(f"{str(coeff.imag)[:6].replace('(','').replace(')','')}j{self.state_list[state]}")
+
+                
+            
+            elif abs(coeff.real) > 0:
+                new_list.append(f"{str(coeff.real)[:6].replace('(','').replace(')','')}{self.state_list[state]}")
+
+            
+            else:
+                continue
+
         
         final_string = ''
         for item in new_list:
@@ -306,11 +398,12 @@ class cirbuild():
         print('###########')
         for state in range(total_states):
             prob = np.abs(self.circuit_matrix[state][0]) ** 2
-            if prob < 1.0e-3:
+            if abs(prob) < 1.0e-3:
 
                 continue
             print((f'{str(prob)[:6]} probability of state {self.state_list[state]}'))
         print('###########')
+
     def cmatrix(self):
         print(self.circuit_matrix)
 
