@@ -1,0 +1,29 @@
+Class cirbuild
+most of the methods are gates
+Initially when the the class is called (with input being number of qubits in the system), all the qubits are initialized to zero.
+
+Qubit numbering as input for gates starts from 0.
+
+Available gates:
+X gate: x(input qubit number)
+Y gate: y()
+Z gate: z()
+Hadamard gate: h()
+
+Rotational gates:
+along x axis    rx(qubit,angle to be rotated by in degrees)
+along y axis    ry('')
+along z axis    rz('')
+
+phase gate:     p(qubit,angle to rotate th phase by in degrees)
+
+cnot gate: cx(control qubit, target qubit)
+control z gate: cz(control qubit, target qubit)
+ccnot gate: ccx(control qubit 1, control qubit 2, target qubit)
+
+circ_state() method provides the total current possible states of the system as a linear combination
+
+probs() method provides the probabilities of the possible states of the system
+
+cmatrix() method shows the current column matrix of the qubits which holds all the possible states for a set of qubits (initialized during the beinging)
+states() shows all the possible combination/ states possible for the initialized set of qubits

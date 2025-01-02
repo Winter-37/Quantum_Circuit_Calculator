@@ -36,7 +36,7 @@ class cirbuild():
         return state_list
         
 
-    def circuit_init(self):
+    def __circuit_init(self):
         for i in range(self.num_qubits):
             self.state += '0'
         self.state += '>'
